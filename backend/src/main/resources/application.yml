@@ -21,10 +21,6 @@ management:
       exposure:
         include: health
 
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-
 app:
   jwt:
     secret: ${JWT_SECRET:NFy4tqcu7GunlxYq3lPjBis47KkVXvGQqzB5SnNy6DVJjAXxOExINKtQHXHflGzM}
