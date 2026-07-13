@@ -14,6 +14,8 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  cache:
+    type: simple   # in-memory for local dev/test; set SPRING_CACHE_TYPE=redis (+ SPRING_DATA_REDIS_HOST/PORT) to use Redis
 
 management:
   endpoints:

@@ -19,6 +19,11 @@ services:
     image: redis:7-alpine
     ports:
       - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
@@ -27,10 +32,15 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/splashcan
       SPRING_DATASOURCE_USERNAME: splashcan
       SPRING_DATASOURCE_PASSWORD: splashcan
+      SPRING_CACHE_TYPE: redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
     ports:
       - "8090:8090"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
 volumes:
