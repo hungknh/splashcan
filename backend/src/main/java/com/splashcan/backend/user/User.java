@@ -50,4 +50,10 @@ public class User {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
+
+    @Column(name = "refresh_token_hash")
+    private String refreshTokenHash;
+
+    @Column(name = "refresh_token_expires_at")
+    private OffsetDateTime refreshTokenExpiresAt;
 }
