@@ -34,6 +34,7 @@ public class AdminProductController {
     @ApiResponse(responseCode = "400", description = "Validation failed")
     @ApiResponse(responseCode = "401", description = "Missing or invalid bearer token")
     @ApiResponse(responseCode = "403", description = "Authenticated user is not an admin")
+    @ApiResponse(responseCode = "404", description = "Category not found")
     @PostMapping("/products")
     public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody AdminProductRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(adminProductService.createProduct(request));
@@ -44,7 +45,7 @@ public class AdminProductController {
     @ApiResponse(responseCode = "400", description = "Validation failed")
     @ApiResponse(responseCode = "401", description = "Missing or invalid bearer token")
     @ApiResponse(responseCode = "403", description = "Authenticated user is not an admin")
-    @ApiResponse(responseCode = "404", description = "Product not found")
+    @ApiResponse(responseCode = "404", description = "Product or category not found")
     @PutMapping("/products/{id}")
     public ProductResponse updateProduct(@PathVariable Long id, @Valid @RequestBody AdminProductRequest request) {
         return adminProductService.updateProduct(id, request);
