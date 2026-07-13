@@ -31,7 +31,7 @@ jobs:
           cache: maven
       - name: Run tests
         working-directory: backend
-        run: ./mvnw test -B
+        run: sh ./mvnw test -B
 
   docker-build:
     runs-on: ubuntu-latest
