@@ -3,6 +3,7 @@ package com.splashcan.backend.product;
 import com.splashcan.backend.exception.ProductNotFoundException;
 import com.splashcan.backend.product.dto.ProductResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +39,7 @@ public class ProductService {
         return productRepository.findAll(spec, pageable).map(ProductResponse::from);
     }
 
+    @Cacheable(value = "products", key = "#id")
     @Transactional(readOnly = true)
     public ProductResponse findById(Long id) {
         return productRepository.findById(id)

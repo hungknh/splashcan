@@ -65,6 +65,26 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, "Sản phẩm vừa được cập nhật bởi thao tác khác, vui lòng thử lại");
     }
 
+    @ExceptionHandler(CategoryNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleCategoryNotFound(CategoryNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidOrderStatusTransitionException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidOrderStatusTransition(InvalidOrderStatusTransitionException ex) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(NotPurchasedException.class)
+    public ResponseEntity<Map<String, Object>> handleNotPurchased(NotPurchasedException ex) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(AlreadyReviewedException.class)
+    public ResponseEntity<Map<String, Object>> handleAlreadyReviewed(AlreadyReviewedException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()

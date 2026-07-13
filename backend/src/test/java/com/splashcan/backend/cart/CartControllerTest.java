@@ -97,7 +97,7 @@ class CartControllerTest {
     @SuppressWarnings("unchecked")
     private String registerAndGetToken(String emailPrefix) {
         Map<String, String> body = Map.of(
-                "email", emailPrefix + "-" + UUID.randomUUID() + "@test.com",
+                "email", emailPrefix + "-" + UUID.randomUUID().toString().substring(0, 8) + "@test.com",
                 "password", "password123",
                 "fullName", "Cart Tester");
         ResponseEntity<Map> response = restTemplate.postForEntity("/api/auth/register", body, Map.class);

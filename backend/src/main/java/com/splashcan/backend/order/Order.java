@@ -36,7 +36,16 @@ import java.util.List;
 public class Order {
 
     public enum Status {
-        PENDING, PAID, SHIPPED, COMPLETED, CANCELLED
+        PENDING, PAID, SHIPPED, COMPLETED, CANCELLED;
+
+        public boolean canTransitionTo(Status newStatus) {
+            return switch (this) {
+                case PENDING -> newStatus == PAID || newStatus == CANCELLED;
+                case PAID -> newStatus == SHIPPED || newStatus == CANCELLED;
+                case SHIPPED -> newStatus == COMPLETED;
+                case COMPLETED, CANCELLED -> false;
+            };
+        }
     }
 
     @Id
