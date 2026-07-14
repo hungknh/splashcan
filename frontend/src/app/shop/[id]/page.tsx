@@ -108,13 +108,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           <button
             type="button"
             disabled={!canAddToCart}
-            title={status !== "authed" ? "Đăng nhập để mua" : undefined}
+            title={status === "guest" ? "Đăng nhập để mua" : undefined}
             onClick={handleAddToCart}
             className="mt-4 rounded bg-black px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-black"
           >
             Thêm vào giỏ
           </button>
-          {status !== "authed" && <p className="mt-1 text-xs text-zinc-500">Đăng nhập để mua</p>}
+          {status === "guest" && <p className="mt-1 text-xs text-zinc-500">Đăng nhập để mua</p>}
         </div>
       </div>
     </div>
