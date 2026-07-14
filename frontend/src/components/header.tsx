@@ -43,6 +43,7 @@ export default function Header() {
         <nav className="flex items-center gap-6 text-sm">
           <Link href="/shop">Shop</Link>
           {status === "authed" && <Link href="/orders">Đơn hàng</Link>}
+          {status === "authed" && user?.role === "ADMIN" && <Link href="/admin">Admin</Link>}
         </nav>
 
         <div className="flex items-center gap-4 text-sm">

@@ -82,3 +82,30 @@ export type Order = {
   items: OrderItem[];
   createdAt: string;
 };
+
+// Admin-only shapes (see com.splashcan.backend.admin.dto.*).
+export type AdminOrder = Order & { userEmail: string };
+
+export type DashboardStats = {
+  totalRevenue: number;
+  totalOrders: number;
+  ordersByDay: { date: string; orderCount: number; revenue: number }[];
+};
+
+export type AdminProductRequest = {
+  name: string;
+  description: string;
+  basePrice: number;
+  categoryId: number;
+  thumbnailUrl: string;
+  model3dUrl: string;
+  active: boolean;
+};
+
+export type AdminVariantRequest = {
+  flavor: string;
+  sizeMl: number;
+  price: number;
+  stockQuantity: number;
+  sku: string;
+};

@@ -28,3 +28,18 @@ const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
 export function orderStatusColor(status: OrderStatus): string {
   return ORDER_STATUS_COLORS[status];
 }
+
+// Mirrors the backend's Order.Status#canTransitionTo state machine (UX only —
+// the backend still enforces it) so the admin status selector only ever
+// offers valid next states. COMPLETED/CANCELLED are terminal (empty list).
+const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ["PAID", "CANCELLED"],
+  PAID: ["SHIPPED", "CANCELLED"],
+  SHIPPED: ["COMPLETED"],
+  COMPLETED: [],
+  CANCELLED: [],
+};
+
+export function nextOrderStatuses(status: OrderStatus): OrderStatus[] {
+  return ORDER_STATUS_TRANSITIONS[status];
+}

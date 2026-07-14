@@ -1,7 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "./api";
 import { useAuthStore } from "./auth-store";
-import type { Cart, Category, Order, Page, Product } from "./types";
+import type {
+  AdminOrder,
+  AdminProductRequest,
+  AdminVariantRequest,
+  Cart,
+  Category,
+  DashboardStats,
+  Order,
+  OrderStatus,
+  Page,
+  Product,
+  ProductVariant,
+} from "./types";
 
 export const PRODUCTS_PAGE_SIZE = 12;
 
@@ -11,6 +23,7 @@ export type ProductFilters = {
   maxPrice?: string;
   sort?: string;
   page: number;
+  size?: number; // override for admin's size=100 full-list fetch; defaults to the shop page size
 };
 
 // Query key includes the full filter object so any filter/pagination change refetches.
@@ -25,12 +38,20 @@ export function useProducts(filters: ProductFilters) {
           maxPrice: filters.maxPrice || undefined,
           sort: filters.sort || undefined,
           page: filters.page,
-          size: PRODUCTS_PAGE_SIZE,
+          size: filters.size ?? PRODUCTS_PAGE_SIZE,
         },
       });
       return data;
     },
   });
+}
+
+// Admin product list: reuses the public endpoint (no separate admin list
+// endpoint exists) at size=100, which covers this phase's whole seed set.
+// Note: the public endpoint only ever returns active=true products, so a
+// product created/edited with "active" unchecked won't appear here afterward.
+export function useAdminProducts() {
+  return useProducts({ page: 0, size: 100 });
 }
 
 export function useProduct(id: string) {
@@ -180,6 +201,123 @@ export function usePayOrder() {
       // list is just invalidated since it's simpler and no flash risk there.
       queryClient.setQueryData(["order", String(data.id)], data);
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+  });
+}
+
+// --- Admin: products/variants -----------------------------------------
+// Invalidating the ["products"] prefix (not just an exact key) refreshes
+// every filter/pagination variant cached under it, including the admin
+// list and the public shop list/detail — React Query matches by prefix.
+
+export function useCreateProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: AdminProductRequest) => {
+      const { data } = await api.post<Product>("/admin/products", payload);
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
+  });
+}
+
+export function useUpdateProduct(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: AdminProductRequest) => {
+      const { data } = await api.put<Product>(`/admin/products/${id}`, payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
+    },
+  });
+}
+
+export function useDeleteProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await api.delete(`/admin/products/${id}`);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
+  });
+}
+
+export function useCreateVariant(productId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: AdminVariantRequest) => {
+      const { data } = await api.post<ProductVariant>(`/admin/products/${productId}/variants`, payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product", productId] });
+    },
+  });
+}
+
+export function useUpdateVariant(productId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: number; payload: AdminVariantRequest }) => {
+      const { data } = await api.put<ProductVariant>(`/admin/variants/${id}`, payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product", productId] });
+    },
+  });
+}
+
+export function useDeleteVariant(productId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await api.delete(`/admin/variants/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product", productId] });
+    },
+  });
+}
+
+// --- Admin: orders/stats -------------------------------------------------
+// Distinct ["admin", ...] key namespace keeps these separate from the
+// customer-facing ["orders"]/["order", id] caches (different shape: includes
+// userEmail, and lists ALL users' orders, not just the caller's own).
+
+export function useAdminOrders() {
+  return useQuery({
+    queryKey: ["admin", "orders"],
+    queryFn: async () => {
+      const { data } = await api.get<AdminOrder[]>("/admin/orders");
+      return data;
+    },
+  });
+}
+
+export function useUpdateOrderStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: OrderStatus }) => {
+      const { data } = await api.patch<AdminOrder>(`/admin/orders/${id}/status`, { status });
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "orders"] }),
+  });
+}
+
+export function useAdminStats() {
+  return useQuery({
+    queryKey: ["admin", "stats"],
+    queryFn: async () => {
+      const { data } = await api.get<DashboardStats>("/admin/dashboard/stats");
+      return data;
     },
   });
 }
