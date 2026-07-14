@@ -35,6 +35,7 @@ services:
       SPRING_CACHE_TYPE: redis
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: "6379"
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "true"
     ports:
       - "8090:8090"
     depends_on:
