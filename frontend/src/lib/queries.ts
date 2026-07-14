@@ -241,7 +241,10 @@ export function useDeleteProduct() {
     mutationFn: async (id: number) => {
       await api.delete(`/admin/products/${id}`);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["products"] }),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product", String(id)] });
+    },
   });
 }
 
