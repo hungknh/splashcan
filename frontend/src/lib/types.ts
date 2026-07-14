@@ -57,3 +57,28 @@ export type Cart = {
   items: CartItem[];
   totalAmount: number;
 };
+
+// Shapes returned by the order API (see backend
+// com.splashcan.backend.order.dto.OrderResponse / OrderItemResponse). SHIPPED/
+// COMPLETED/CANCELLED are only ever set via the admin API — a customer's own
+// order from this flow will only ever be PENDING or PAID.
+export type OrderStatus = "PENDING" | "PAID" | "SHIPPED" | "COMPLETED" | "CANCELLED";
+
+export type OrderItem = {
+  variantId: number;
+  flavor: string;
+  sizeMl: number;
+  sku: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+};
+
+export type Order = {
+  id: number;
+  status: OrderStatus;
+  totalAmount: number;
+  shippingAddress: string;
+  items: OrderItem[];
+  createdAt: string;
+};

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "./api";
 import { useAuthStore } from "./auth-store";
-import type { Cart, Category, Page, Product } from "./types";
+import type { Cart, Category, Order, Page, Product } from "./types";
 
 export const PRODUCTS_PAGE_SIZE = 12;
 
@@ -117,5 +117,69 @@ export function useRemoveCartItem() {
       return data;
     },
     onSuccess: setCartCache,
+  });
+}
+
+// Orders: user-scoped, so gated on auth same as cart to avoid firing (and
+// 401-ing) before AuthProvider resolves or for guests hitting the page directly.
+export function useOrders() {
+  const status = useAuthStore((s) => s.status);
+  return useQuery({
+    queryKey: ["orders"],
+    queryFn: async () => {
+      const { data } = await api.get<Order[]>("/orders");
+      return data;
+    },
+    enabled: status === "authed",
+  });
+}
+
+export function useOrder(id: string) {
+  const status = useAuthStore((s) => s.status);
+  return useQuery({
+    queryKey: ["order", id],
+    queryFn: async () => {
+      const { data } = await api.get<Order>(`/orders/${id}`);
+      return data;
+    },
+    enabled: status === "authed",
+    // Don't retry: a 404 means "not your order / doesn't exist" and retrying just delays notFound().
+    retry: false,
+  });
+}
+
+// Creating an order clears the user's cart server-side as a side effect the
+// client didn't directly cause, so (unlike the cart item mutations above)
+// cache and reality can drift — invalidate rather than manually reconstruct.
+// Also invalidate the orders list so history is fresh right after checkout.
+export function useCreateOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { shippingAddress: string }) => {
+      const { data } = await api.post<Order>("/orders", payload);
+      return data;
+    },
+    onSuccess: () => {
+      const userId = useAuthStore.getState().user?.id;
+      queryClient.invalidateQueries({ queryKey: cartKey(userId) });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+  });
+}
+
+export function usePayOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { data } = await api.post<Order>(`/orders/${id}/pay`);
+      return data;
+    },
+    onSuccess: (data) => {
+      // We have the exact updated order, so write it straight into the detail
+      // cache (avoids a PENDING flash right after the checkout redirect); the
+      // list is just invalidated since it's simpler and no flash risk there.
+      queryClient.setQueryData(["order", String(data.id)], data);
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
   });
 }
