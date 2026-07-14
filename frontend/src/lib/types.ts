@@ -36,3 +36,24 @@ export type Page<T> = {
   number: number;
   size: number;
 };
+
+// Shapes returned by the cart API (see backend
+// com.splashcan.backend.cart.dto.CartResponse / CartItemResponse — verified
+// against the source, not from memory). Note there is NO productId/productName
+// on the item, just the variant's own flavor/sizeMl/sku.
+export type CartItem = {
+  id: number;
+  variantId: number;
+  flavor: string;
+  sizeMl: number;
+  sku: string;
+  unitPrice: number;
+  quantity: number;
+  subtotal: number;
+};
+
+export type Cart = {
+  id: number;
+  items: CartItem[];
+  totalAmount: number;
+};

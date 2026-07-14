@@ -4,17 +4,22 @@ import { use, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import axios from "axios";
-import { useProduct } from "@/lib/queries";
+import { useAddCartItem, useProduct } from "@/lib/queries";
 import { useAuthStore } from "@/lib/auth-store";
+import { useCartUiStore } from "@/lib/cart-ui-store";
 import { formatPrice } from "@/lib/format";
+import { getErrorMessage } from "@/lib/api";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: product, isLoading, isError, error, refetch } = useProduct(id);
   const status = useAuthStore((s) => s.status);
+  const addItem = useAddCartItem();
+  const openCart = useCartUiStore((s) => s.open);
 
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [addError, setAddError] = useState<string | null>(null);
 
   if (isError) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -43,7 +48,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const canAddToCart = status === "authed" && !!selectedVariant && selectedVariant.stockQuantity > 0;
 
   function handleAddToCart() {
-    // ponytail: cart API wiring lands in Task 4 (this button just proves the selector UI works for now).
+    if (!selectedVariant) return;
+    setAddError(null);
+    addItem.mutate(
+      { variantId: selectedVariant.id, quantity },
+      {
+        onSuccess: () => openCart(),
+        onError: (err) => setAddError(getErrorMessage(err)),
+      }
+    );
   }
 
   return (
@@ -107,7 +120,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
           <button
             type="button"
-            disabled={!canAddToCart}
+            disabled={!canAddToCart || addItem.isPending}
             title={status === "guest" ? "Đăng nhập để mua" : undefined}
             onClick={handleAddToCart}
             className="mt-4 rounded bg-black px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-black"
@@ -115,6 +128,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             Thêm vào giỏ
           </button>
           {status === "guest" && <p className="mt-1 text-xs text-zinc-500">Đăng nhập để mua</p>}
+          {addError && <p className="mt-1 text-xs text-red-600">{addError}</p>}
         </div>
       </div>
     </div>
